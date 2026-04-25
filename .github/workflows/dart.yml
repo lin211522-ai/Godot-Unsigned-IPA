@@ -39,7 +39,6 @@ jobs:
       - name: Manual Xcode Build (Unsigned)
         run: |
           cd build/ios
-          # We use "project" as the scheme because Godot generates it based on the output filename
           xcodebuild -project project.xcodeproj \
             -scheme "project" \
             -sdk iphoneos \
@@ -47,8 +46,12 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            ASSETCATALOG_COMPILER_SKIP_APP_ICON_CHECK=YES \
             clean archive \
             -archivePath project.xcarchive
+
 
       - name: Package IPA
         run: |
