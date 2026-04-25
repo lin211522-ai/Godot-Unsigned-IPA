@@ -28,29 +28,29 @@ jobs:
           unzip templates.tpz -d temp_templates
           mv temp_templates/templates/* ~/Library/Application\ Support/Godot/export_templates/4.4.stable/
           
-      - name: Export Godot Project (Prepare Xcode)
+      - name: Export Godot Project (Generate Files Only)
         run: |
           mkdir -p build/ios
-          # First, prime the engine imports
-          ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --editor --quit || true
-          # Export to Xcode project
-          ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --export-release "iOS" build/ios/project.xcodeproj
+          # Using --export-release but pointing to the .xcodeproj folder 
+          # We add '|| true' to force the script to continue if Godot grumbles about signing
+          ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --export-release "iOS" build/ios/project.xcodeproj || true
         
-      - name: Manual Xcode Build (Unsigned)
+      - name: Manual Xcode Build (Force Unsigned)
         run: |
           cd build/ios
+          # We use generic/platform=iOS to avoid destination errors
           xcodebuild -project project.xcodeproj \
             -scheme "project" \
             -sdk iphoneos \
             -configuration Release \
+            -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            ASSETCATALOG_COMPILER_SKIP_APP_ICON_CHECK=YES \
-            clean archive \
-            -archivePath project.xcarchive
+            archive -archivePath project.xcarchive
+
 
 
       - name: Package IPA
