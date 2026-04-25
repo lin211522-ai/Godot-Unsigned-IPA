@@ -39,7 +39,7 @@ jobs:
       - name: Manual Xcode Build (Unsigned)
         run: |
           cd build/ios
-          # This command forces Xcode to build the binary without needing a Provisioning Profile or Team ID
+          # We use "project" as the scheme because Godot generates it based on the output filename
           xcodebuild -project project.xcodeproj \
             -scheme "project" \
             -sdk iphoneos \
@@ -49,11 +49,11 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             clean archive \
             -archivePath project.xcarchive
-      
-      - name: Package IPA Structure
+
+      - name: Package IPA
         run: |
           mkdir -p build/final/Payload
-          # Copy the .app folder into the Payload folder
+          # Copy the .app into Payload
           cp -r build/ios/project.xcarchive/Products/Applications/*.app build/final/Payload/
           cd build/final
           zip -r ../godot_4_4_template.ipa Payload
