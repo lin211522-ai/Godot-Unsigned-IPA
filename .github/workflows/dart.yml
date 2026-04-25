@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-  workflow_dispatch: # This adds the "Run Workflow" button in the Actions tab
+  workflow_dispatch:
 
 jobs:
   build-ios:
@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Updated to v4
 
       - name: Install Godot 4.4
         run: |
@@ -30,7 +30,6 @@ jobs:
       - name: Export Godot Project
         run: |
           mkdir -p build/ios
-          # Use --path . if your project.godot is in the root
           ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --export-release "iOS" build/ios/project.xcodeproj
         
       - name: Build Xcode Project (Unsigned)
@@ -40,13 +39,13 @@ jobs:
       
       - name: Package IPA
         run: |
-          mkdir -p build/Payload
-          cp -r build/ios/project.xcarchive/Products/Applications/*.app build/Payload/
-          cd build
-          zip -r godot_4_4_base.ipa Payload
+          mkdir -p build/final/Payload
+          cp -r build/ios/project.xcarchive/Products/Applications/*.app build/final/Payload/
+          cd build/final
+          zip -r ../godot_4_4_base.ipa Payload
 
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: godot_4_4_base_ipa
           path: build/godot_4_4_base.ipa
