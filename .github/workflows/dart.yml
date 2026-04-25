@@ -36,10 +36,19 @@ jobs:
           # Export to Xcode project
           ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --export-release "iOS" build/ios/project.xcodeproj
         
-      - name: Build Xcode Project (Unsigned)
+      - name: Manual Xcode Build (Unsigned)
         run: |
           cd build/ios
-          xcodebuild -project project.xcodeproj -scheme "project" -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean archive -archivePath project.xcarchive
+          # This command forces Xcode to build the binary without needing a Provisioning Profile or Team ID
+          xcodebuild -project project.xcodeproj \
+            -scheme "project" \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean archive \
+            -archivePath project.xcarchive
       
       - name: Package IPA Structure
         run: |
