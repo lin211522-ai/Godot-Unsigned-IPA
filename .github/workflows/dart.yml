@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch: # This adds the "Run Workflow" button in the Actions tab
+
 jobs:
   build-ios:
     runs-on: macos-latest
@@ -12,44 +14,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Godot
+      - name: Install Godot 4.4
         run: |
-          curl -L https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_macos.universal.zip -o godot.zip
+          curl -L https://github.com -o godot.zip
           unzip godot.zip -d godot
           chmod +x godot/Godot.app/Contents/MacOS/Godot
-        id: godot
 
-      - name: Download Export Templates
+      - name: Download Export Templates 4.4
         run: |
-          curl -L https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz -o templates.tpz
-          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.3.stable/
-          tar -xf templates.tpz -C ~/Library/Application\ Support/Godot/export_templates/
-
-      - name: Move iOS Export Template to Correct Directory
-        run: |
-          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.3.stable/
-          mv ~/Library/Application\ Support/Godot/export_templates/templates/ios.zip ~/Library/Application\ Support/Godot/export_templates/4.3.stable/
+          curl -L https://github.com -o templates.tpz
+          mkdir -p ~/Library/Application\ Support/Godot/export_templates/4.4.stable/
+          unzip templates.tpz -d temp_templates
+          mv temp_templates/templates/* ~/Library/Application\ Support/Godot/export_templates/4.4.stable/
           
-      - name: Export Godot Project for iOS
+      - name: Export Godot Project
         run: |
-          mkdir -p build
-          ./godot/Godot.app/Contents/MacOS/Godot --headless --export-release "iOS" build/ios_project.zip
-        continue-on-error: true
+          mkdir -p build/ios
+          # Use --path . if your project.godot is in the root
+          ./godot/Godot.app/Contents/MacOS/Godot --headless --path . --export-release "iOS" build/ios/project.xcodeproj
         
       - name: Build Xcode Project (Unsigned)
         run: |
-          cd build
-          xcodebuild -project ios_project.xcodeproj -scheme ios_project -sdk iphoneos -configuration Release -destination generic/platform=iOS archive -archivePath ios_project.xcarchive CODE_SIGNING_ALLOWED=NO
+          cd build/ios
+          xcodebuild -project project.xcodeproj -scheme "project" -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean archive -archivePath project.xcarchive
       
-      - name: Package Unsigned IPA
+      - name: Package IPA
         run: |
-          cd build/ios_project.xcarchive/Products/Applications
-          mkdir -p Payload
-          mv *.app Payload/
-          zip -r ../ios_project.ipa Payload
+          mkdir -p build/Payload
+          cp -r build/ios/project.xcarchive/Products/Applications/*.app build/Payload/
+          cd build
+          zip -r godot_4_4_base.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ios_project.ipa
-          path: build/ios_project.xcarchive/Products/ios_project.ipa
+          name: godot_4_4_base_ipa
+          path: build/godot_4_4_base.ipa
